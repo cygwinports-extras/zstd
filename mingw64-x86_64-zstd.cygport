@@ -1,0 +1,40 @@
+CROSS_HOST="x86_64-w64-mingw32"
+inherit cross
+
+NAME="mingw64-x86_64-zstd"
+VERSION=1.1.0
+RELEASE=1
+CATEGORY="Devel"
+SUMMARY="Zstandard compression library for Win64 toolchain"
+DESCRIPTION="Zstandard is a real-time compression algorithm, providing high
+compression ratios. It offers a very wide range of compression / speed
+trade-off, while being backed by a very fast decoder."
+HOMEPAGE="http://facebook.github.io/zstd/"
+SRC_URI="https://github.com/facebook/zstd/archive/v${VERSION}/zstd-v${VERSION}.tar.gz"
+SRC_DIR="zstd-${VERSION}"
+PATCH_URI="
+	http://pkgs.fedoraproject.org/cgit/rpms/zstd.git/plain/zstd-lib-no-rebuild.patch
+	1.1.0-cygming-dll.patch
+	1.1.0-cygwin-build.patch
+	1.1.0-link-dynamic.patch
+"
+
+MAKEOPTS="-j1 PREFIX=${CROSS_PREFIX} VOID=/dev/null"
+
+src_compile() {
+    cd ${S}
+    lndirs
+    cd ${B}
+    cygmake -C lib
+}
+
+src_test() {
+    cd ${B}
+    cygmake -C tests test LDFLAGS=-static
+    cygmake -C zlibwrapper test LDFLAGS=-static
+}
+
+src_install() {
+    cd ${B}
+    cyginstall -C lib
+}

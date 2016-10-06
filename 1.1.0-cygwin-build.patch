@@ -1,0 +1,44 @@
+--- origsrc/zstd-1.1.0/Makefile	2016-09-27 17:15:03.000000000 -0500
++++ src/zstd-1.1.0/Makefile	2016-10-05 15:29:15.406692800 -0500
+@@ -51,7 +51,7 @@ clean:
+ #----------------------------------------------------------------------------------
+ #make install is validated only for Linux, OSX, kFreeBSD, Hurd and some BSD targets
+ #----------------------------------------------------------------------------------
+-ifneq (,$(filter $(shell uname),Linux Darwin GNU/kFreeBSD GNU FreeBSD DragonFly NetBSD))
++ifneq (,$(filter Linux Darwin GNU/kFreeBSD GNU FreeBSD DragonFly NetBSD CYGWIN%, $(shell uname)))
+ HOST_OS = POSIX
+ install:
+ 	$(MAKE) -C $(ZSTDDIR) $@
+--- origsrc/zstd-1.1.0/lib/Makefile	2016-09-27 17:15:03.000000000 -0500
++++ src/zstd-1.1.0/lib/Makefile	2016-10-05 16:03:30.048273700 -0500
+@@ -78,7 +94,7 @@ clean:
+ 
+ #------------------------------------------------------------------------
+ #make install is validated only for Linux, OSX, kFreeBSD, Hurd and some BSD targets
+-ifneq (,$(filter $(shell uname),Linux Darwin GNU/kFreeBSD GNU FreeBSD DragonFly NetBSD))
++ifneq (,$(filter Linux Darwin GNU/kFreeBSD GNU FreeBSD DragonFly NetBSD CYGWIN%, $(shell uname)))
+ 
+ libzstd.pc:
+ libzstd.pc: libzstd.pc.in
+--- origsrc/zstd-1.1.0/programs/Makefile	2016-09-27 17:15:03.000000000 -0500
++++ src/zstd-1.1.0/programs/Makefile	2016-10-05 16:14:32.556648400 -0500
+@@ -134,7 +134,7 @@ clean:
+ #----------------------------------------------------------------------------------
+ #make install is validated only for Linux, OSX, kFreeBSD, Hurd and some BSD targets
+ #----------------------------------------------------------------------------------
+-ifneq (,$(filter $(shell uname),Linux Darwin GNU/kFreeBSD GNU OpenBSD FreeBSD DragonFly NetBSD))
++ifneq (,$(filter Linux Darwin GNU/kFreeBSD GNU OpenBSD FreeBSD DragonFly NetBSD CYGWIN%, $(shell uname)))
+ install: zstd
+ 	@echo Installing binaries
+ 	@install -d -m 755 $(DESTDIR)$(BINDIR)/ $(DESTDIR)$(MANDIR)/
+--- origsrc/zstd-1.1.0/tests/Makefile	2016-09-27 17:15:03.000000000 -0500
++++ src/zstd-1.1.0/tests/Makefile	2016-10-05 18:17:50.991128700 -0500
+@@ -151,7 +151,7 @@ clean:
+ #----------------------------------------------------------------------------------
+ #make valgrindTest is validated only for Linux, OSX, kFreeBSD, Hurd and some BSD targets
+ #----------------------------------------------------------------------------------
+-ifneq (,$(filter $(shell uname),Linux Darwin GNU/kFreeBSD GNU OpenBSD FreeBSD DragonFly))
++ifneq (,$(filter Linux Darwin GNU/kFreeBSD GNU OpenBSD FreeBSD DragonFly CYGWIN%, $(shell uname)))
+ HOST_OS = POSIX
+ 
+ valgrindTest: VALGRIND = valgrind --leak-check=full --error-exitcode=1

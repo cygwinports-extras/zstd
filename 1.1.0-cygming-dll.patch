@@ -1,0 +1,71 @@
+--- origsrc/zstd-1.1.0/lib/Makefile	2016-09-27 17:15:03.000000000 -0500
++++ src/zstd-1.1.0/lib/Makefile	2016-10-05 16:03:30.048273700 -0500
+@@ -20,6 +20,7 @@ VERSION?= $(LIBVER)
+ 
+ DESTDIR?=
+ PREFIX ?= /usr/local
++DLLDIR ?= $(PREFIX)/bin
+ LIBDIR ?= $(PREFIX)/lib
+ INCLUDEDIR=$(PREFIX)/include
+ 
+@@ -47,6 +48,16 @@ ifeq ($(shell uname), Darwin)
+ 	SHARED_EXT_MAJOR = $(LIBVER_MAJOR).$(SHARED_EXT)
+ 	SHARED_EXT_VER = $(LIBVER).$(SHARED_EXT)
+ 	SONAME_FLAGS = -install_name $(PREFIX)/lib/$@.$(SHARED_EXT_MAJOR) -compatibility_version $(LIBVER_MAJOR) -current_version $(LIBVER)
++else ifeq ($(OS), Cygwin)
++	SHARED_PFX = cyg
++	SHARED_EXT = dll.a
++	SHARED_EXT_VER = -$(LIBVER_MAJOR).dll
++	SONAME_FLAGS = -Wl,--out-implib,$@.$(SHARED_EXT)
++else ifneq (,$(filter Windows%,$(OS)))
++	SHARED_PFX =
++	SHARED_EXT = dll.a
++	SHARED_EXT_VER = $(LIBVER_MAJOR).dll
++	SONAME_FLAGS = -Wl,--out-implib,$@.$(SHARED_EXT)
+ else
+ 	SONAME_FLAGS = -Wl,-soname=$@.$(SHARED_EXT).$(LIBVER_MAJOR)
+ 	SHARED_EXT = so
+@@ -66,10 +77,14 @@ libzstd: $(ZSTD_FILES)
+ 	@$(CC) $(FLAGS) -c $^
+ 	@$(AR) rcs $@.a *.o
+ 	@echo compiling dynamic library $(LIBVER)
++ifneq (,$(filter Cygwin Windows%,$(OS)))
++	@$(CC) $(FLAGS) -shared $^ -DPIC $(SONAME_FLAGS) -o $(SHARED_PFX)zstd$(SHARED_EXT_VER)
++else
+ 	@$(CC) $(FLAGS) -shared $^ -fPIC $(SONAME_FLAGS) -o $@.$(SHARED_EXT_VER)
+ 	@echo creating versioned links
+ 	@ln -sf $@.$(SHARED_EXT_VER) $@.$(SHARED_EXT_MAJOR)
+ 	@ln -sf $@.$(SHARED_EXT_VER) $@.$(SHARED_EXT)
++endif
+ 
+ clean:
+ 	@rm -f core *.o *.a *.gcda *.$(SHARED_EXT) *.$(SHARED_EXT).* libzstd.pc
+@@ -91,8 +106,13 @@ libzstd.pc: libzstd.pc.in
+ 
+ install: libzstd.pc
+ 	@install -d -m 755 $(DESTDIR)$(LIBDIR)/pkgconfig/ $(DESTDIR)$(INCLUDEDIR)/
++ifneq (,$(filter Cygwin Windows%,$(OS)))
++	@install -d -m 755 $(DESTDIR)$(DLLDIR)/
++	@install -m 755 $(SHARED_PFX)zstd$(SHARED_EXT_VER) $(DESTDIR)$(DLLDIR)/
++else
+ 	@install -m 755 libzstd.$(SHARED_EXT_VER) $(DESTDIR)$(LIBDIR)/libzstd.$(SHARED_EXT_VER)
+ 	@cp -a libzstd.$(SHARED_EXT_MAJOR) $(DESTDIR)$(LIBDIR)
++endif
+ 	@cp -a libzstd.$(SHARED_EXT) $(DESTDIR)$(LIBDIR)
+ 	@cp -a libzstd.pc $(DESTDIR)$(LIBDIR)/pkgconfig/
+ 	@install -m 644 libzstd.a $(DESTDIR)$(LIBDIR)/libzstd.a
+@@ -103,9 +123,13 @@ install: libzstd libzstd.pc
+ 
+ uninstall:
+ 	$(RM) $(DESTDIR)$(LIBDIR)/libzstd.$(SHARED_EXT)
+-	$(RM) $(DESTDIR)$(LIBDIR)/libzstd.$(SHARED_EXT_MAJOR)
+ 	$(RM) $(DESTDIR)$(LIBDIR)/pkgconfig/libzstd.pc
++ifneq (,$(filter Cygwin Windows%,$(OS)))
++	$(RM) $(DESTDIR)$(DLLDIR)/$(SHARED_PFX)zstd$(SHARED_EXT_VER)
++else
++	$(RM) $(DESTDIR)$(LIBDIR)/libzstd.$(SHARED_EXT_MAJOR)
+ 	$(RM) $(DESTDIR)$(LIBDIR)/libzstd.$(SHARED_EXT_VER)
++endif
+ 	$(RM) $(DESTDIR)$(LIBDIR)/libzstd.a
+ 	$(RM) $(DESTDIR)$(INCLUDEDIR)/zstd.h
+ 	$(RM) $(DESTDIR)$(INCLUDEDIR)/zbuff.h

@@ -1,0 +1,39 @@
+--- origsrc/zstd-1.1.0/contrib/pzstd/Makefile	2016-09-27 17:15:03.000000000 -0500
++++ src/zstd-1.1.0/contrib/pzstd/Makefile	2016-10-05 21:14:42.682949500 -0500
+@@ -23,6 +23,7 @@ ZSTDDECOMP_FILES := $(ZSTDDIR)/decompres
+ ZSTD_FILES := $(ZSTDDECOMP_FILES) $(ZSTDCOMMON_FILES) $(ZSTDCOMP_FILES)
+ 
+ 
++LIBEXT = .a
+ # Define *.exe as extension for Windows systems
+ ifneq (,$(filter Windows%,$(OS)))
+ EXT =.exe
+@@ -39,7 +40,7 @@ all: pzstd
+ 
+ libzstd.a: $(ZSTD_FILES)
+ 	$(MAKE) -C $(ZSTDDIR) libzstd
+-	@cp $(ZSTDDIR)/libzstd.a .
++	@ln -s $(ZSTDDIR)/libzstd$(LIBEXT) $@
+ 
+ Pzstd.o: Pzstd.h Pzstd.cpp ErrorHolder.h utils/*.h
+ 	$(CXX) $(FLAGS) -c Pzstd.cpp -o $@
+--- origsrc/zstd-1.1.0/programs/Makefile	2016-10-05 21:08:19.288537100 -0500
++++ src/zstd-1.1.0/programs/Makefile	2016-10-05 21:11:16.139164600 -0500
+@@ -53,6 +53,7 @@ ZSTDLEGACY_FILES:= $(ZSTDDIR)/legacy/*.c
+ endif
+ 
+ 
++LIBEXT = .a
+ # Define *.exe as extension for Windows systems
+ ifneq (,$(filter Windows%,$(OS)))
+ EXT =.exe
+@@ -83,8 +84,7 @@ $(ZSTDDECOMP_O): $(ZSTDDIR)/decompress/z
+ $(ZSTDDECOMP32_O): $(ZSTDDIR)/decompress/zstd_decompress.c
+ 	$(CC)  -m32 $(ALIGN_LOOP) $(FLAGS) -DZSTD_LEGACY_SUPPORT=$(ZSTD_LEGACY_SUPPORT) $^ -c -o $@
+ 
+-zstd  : $(ZSTDDECOMP_O) $(ZSTD_FILES) $(ZSTDLEGACY_FILES) $(ZDICT_FILES) \
+-        zstdcli.c fileio.c bench.c datagen.c dibio.c
++zstd  : zstdcli.c fileio.c bench.c datagen.c dibio.c ../lib/libzstd$(LIBEXT)
+ 	$(CC)      $(FLAGS) -DZSTD_LEGACY_SUPPORT=$(ZSTD_LEGACY_SUPPORT) $^ $(RES_FILE) -o $@$(EXT)
+ 
+ zstd32 : $(ZSTDDECOMP32_O) $(ZSTD_FILES) $(ZSTDLEGACY_FILES) $(ZDICT_FILES) \
